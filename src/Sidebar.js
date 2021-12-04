@@ -1,14 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./Sidebar.css";
 import { ExpandMore, Add, SignalCellularAlt, InfoOutlined,Call, Mic, Headset, Settings } from "@material-ui/icons";
 import SidebarChannel from "./SidebarChannel";
 import { Avatar } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import { selectUser } from "./features/userSlice";
-import { auth } from './firebase'
+import db,{ auth } from './firebase'
 
 const Sidebar = () => {
-const user = useSelector(selectUser)
+const user = useSelector(selectUser);
+const [channels, setchannels] = useState([]);
+
+useEffect(() => {
+    db.collection('channels').onSnapshot(snapshot => (
+        setchannels(snapshot.docs.map(doc => ({
+            id:doc.id,
+            channel:doc.data(),
+        })))
+    ));
+}, []);
+  
+   const handleAddChannel = () => {
+       const channelName = prompt("Enter a new channel name");
+
+       if(channelName) {
+           db.collection('channels').add({
+               channelName : channelName,
+           })
+       }
+   }
+
   return (
     <div className="sidebar">
       <div className="sidebar__top">
@@ -21,13 +42,14 @@ const user = useSelector(selectUser)
             <ExpandMore />
             <h4>Text Channels</h4>
           </div>
-          <Add className="sidebar__addChannel" />
+          <Add onClick={handleAddChannel} className="sidebar__addChannel" />
         </div>
         <div className="sidebar__channelsList">
-          <SidebarChannel />
-          <SidebarChannel />
-          <SidebarChannel />
-          <SidebarChannel />
+          {
+              channels.map(({id,channel}) =>(
+                <SidebarChannel key={id} id={id} channelName={channel.channelName}/>
+              ))
+          }
         </div>
       </div>
       <div className="sidebar__voice">
@@ -44,7 +66,7 @@ const user = useSelector(selectUser)
       <div className="sidebar__profile">
           <Avatar onClick={()=> auth.signOut()} src={user.photo}/>
           <div className="sidebar__profileInfo">
-              <h3>{user.dispalyName}</h3>
+              <h3>{user.displayName}</h3>
               <p>#{user.uid.substring(0,5)}</p>
           </div>
           <div className="sidebar__profileIcons">

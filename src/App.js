@@ -19,7 +19,7 @@ function App() {
             uid:authUser.uid,
             photo:authUser.photoURL,
             email: authUser.email,
-            displayname: authUser.displayName,
+            displayName: authUser.displayName,
           }))
        }else{
          // the user is logged out
